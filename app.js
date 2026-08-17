@@ -441,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCounters();
   initScrollReveal();
   initTyping();
+  initScrollUI();
   schedulePopup();
 
   // ESC menutup drawer
@@ -461,7 +462,41 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initLoading() {
-  setTimeout(() => { const ls = document.getElementById('loadingScreen'); if (ls) ls.classList.add('hidden'); }, 1900);
+  // Generate floating particles
+  const container = document.getElementById('loadingParticles');
+  if (container) {
+    const colors = ['', 'gold', 'purple'];
+    for (let i = 0; i < 22; i++) {
+      const p = document.createElement('div');
+      const size = 3 + Math.random() * 6;
+      const left = Math.random() * 100;
+      const duration = 3.5 + Math.random() * 3;
+      const delay = Math.random() * 4;
+      const drift = (Math.random() * 80 - 40) + 'px';
+      p.className = 'loading-particle ' + colors[Math.floor(Math.random() * colors.length)];
+      p.style.cssText = `left:${left}%;width:${size}px;height:${size}px;--drift:${drift};animation-duration:${duration}s;animation-delay:${delay}s;`;
+      container.appendChild(p);
+    }
+  }
+
+  // Rotate loading messages across the 5s duration
+  const messages = [
+    'Mempersiapkan pengalaman terbaik...',
+    'Menyiapkan talent pilihan...',
+    'Hampir siap...'
+  ];
+  const textEl = document.getElementById('loadingText');
+  let mi = 0;
+  const msgTimer = setInterval(() => {
+    mi++;
+    if (textEl && mi < messages.length) textEl.textContent = messages[mi];
+  }, 1600);
+
+  setTimeout(() => {
+    clearInterval(msgTimer);
+    const ls = document.getElementById('loadingScreen');
+    if (ls) ls.classList.add('hidden');
+  }, 5000);
 }
 
 function initCursor() {
@@ -478,6 +513,13 @@ function initNavbar() {
     const nb = document.getElementById('navbar');
     if (nb) nb.classList.toggle('scrolled', window.scrollY > 20);
   });
+}
+
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
 }
 
 function toggleMobileMenu() {
@@ -498,6 +540,19 @@ function initTheme() {
 function updateThemeIcon(t) {
   const i = document.getElementById('themeIcon');
   if (i) i.className = t==='dark' ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function initScrollUI() {
+  const bar = document.getElementById('scrollProgress');
+  const btt = document.getElementById('backToTop');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const scrolled = h.scrollTop;
+    const max = h.scrollHeight - h.clientHeight;
+    const pct = max > 0 ? (scrolled / max) * 100 : 0;
+    if (bar) bar.style.width = pct + '%';
+    if (btt) btt.classList.toggle('visible', scrolled > 500);
+  }, { passive: true });
 }
 
 function initScrollReveal() {
@@ -725,7 +780,7 @@ function renderTalents() {
         <div class="tc-services">${(t.services||[]).slice(0,3).map(s=>`<span>${s}</span>`).join('')}${(t.services||[]).length>3?`<span>+${t.services.length-3}</span>`:''}</div>
         <div style="display:flex;gap:.5rem;margin-top:.75rem">
           <button class="btn-primary" style="flex:1;justify-content:center;font-size:.8rem" onclick="event.stopPropagation();openBooking('${t.id}')">Booking</button>
-          <a href="https://wa.me/628988995637?text=Halo+saya+tertarik+dengan+${encodeURIComponent(t.name)}" target="_blank" style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;flex-shrink:0;text-decoration:none" onclick="event.stopPropagation()"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://wa.me/6287778787822?text=Halo+saya+tertarik+dengan+${encodeURIComponent(t.name)}" target="_blank" style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;flex-shrink:0;text-decoration:none" onclick="event.stopPropagation()"><i class="fab fa-whatsapp"></i></a>
         </div>
       </div>
     </div>`;
@@ -775,7 +830,7 @@ function openTalentDetail(id) {
         </div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap">
           <button class="btn-primary glow-btn" style="flex:1;justify-content:center" onclick="openBooking('${t.id}')"><i class="fas fa-calendar-plus"></i> Booking Sekarang</button>
-          <a href="https://wa.me/628988995637?text=Halo+saya+ingin+booking+${encodeURIComponent(t.name)}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;text-decoration:none;display:flex;align-items:center;gap:.4rem"><i class="fab fa-whatsapp"></i> WhatsApp Admin</a>
+          <a href="https://wa.me/6287778787822?text=Halo+saya+ingin+booking+${encodeURIComponent(t.name)}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;text-decoration:none;display:flex;align-items:center;gap:.4rem"><i class="fab fa-whatsapp"></i> WhatsApp Admin</a>
         </div>
       </div>
     </div>`;
@@ -792,8 +847,6 @@ function renderPricelist() {
     {key:'offline',label:'📍 Offline Date',desc:'Jalan bareng'},
     {key:'pap',label:'📸 PAP',desc:'Photo & proof'},
     {key:'mabar',label:'🎮 Mabar',desc:'Main game bareng'},
-    {key:'paket',label:'💎 Paket Relationship',desc:'Bundle terlengkap',isPackage:true},
-    {key:'pdkt',label:'💌 PDKT Package',desc:'Paket spesial PDKT',isPackage:true},
   ];
   const filtered = currentPriceFilter==='all' ? SERVICES : SERVICES.filter(s=>s.key===currentPriceFilter);
   el.innerHTML = filtered.map(s => {
@@ -809,7 +862,7 @@ function renderPricelist() {
           <ul class="pkg-items">${(pkg.items||[]).map(i=>`<li><i class="fas fa-check"></i> ${i}</li>`).join('')}</ul>
           <div style="display:flex;gap:.4rem;margin-top:auto">
             <button class="btn-primary" style="flex:1;justify-content:center" onclick="openBookingFromPrice('${s.label} — ${pkg.label}','${pkg.price}')">Pesan</button>
-            <a href="https://wa.me/628988995637?text=Mau+pesan+${encodeURIComponent(s.label+' '+pkg.label)}" target="_blank" style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;text-decoration:none"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://wa.me/6287778787822?text=Mau+pesan+${encodeURIComponent(s.label+' '+pkg.label)}" target="_blank" style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;text-decoration:none"><i class="fab fa-whatsapp"></i></a>
           </div>
         </div>`).join('')}</div></div>`;
     }
@@ -820,7 +873,7 @@ function renderPricelist() {
         <div class="price-item-price">Rp ${item.price}<small>/sesi</small></div>
         <div style="display:flex;gap:.4rem;margin-top:.75rem">
           <button class="btn-sm" style="flex:1;justify-content:center" onclick="openBookingFromPrice('${s.label} — ${item.label}','${item.price}')">Pesan</button>
-          <a href="https://wa.me/628988995637?text=Mau+pesan+${encodeURIComponent(s.label+' '+item.label)}" target="_blank" style="width:34px;height:34px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:.9rem;flex-shrink:0;text-decoration:none"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://wa.me/6287778787822?text=Mau+pesan+${encodeURIComponent(s.label+' '+item.label)}" target="_blank" style="width:34px;height:34px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:.9rem;flex-shrink:0;text-decoration:none"><i class="fab fa-whatsapp"></i></a>
         </div>
       </div>`).join('')}</div></div>`;
   }).join('');
