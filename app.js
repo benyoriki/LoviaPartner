@@ -1720,70 +1720,38 @@ function toggleMusic() {
 
 const NOTIF_MESSAGES = [
   {
-    emoji: '💻',
-    badge: '🔥 Website Developer',
-    title: 'Mau website sekeren ini?',
-    desc: 'Dibuat oleh developer terbaik — benyoriki.com! Klik dan wujudkan impianmu sekarang.',
-    cta: '✨ Kunjungi benyoriki.com',
-    ctaUrl: 'https://benyoriki.com/'
-  },
-  {
     emoji: '🌸',
     badge: '💕 Ara online!',
     title: 'Talent favoritmu sedang online',
-    desc: 'Ara Salsabila & 7 talent lain siap menemanimu. Booking sekarang sebelum penuh!',
-    cta: '💌 Cari Talent Sekarang',
+    desc: 'Ara Salsabila & 7 talent lain siap menemanimu.',
+    cta: 'Cari Talent',
     ctaUrl: null,
     action: () => showPage('talents')
-  },
-  {
-    emoji: '🎨',
-    badge: '👨‍💻 Web Developer',
-    title: 'Website ini dibuat oleh @benyoriki',
-    desc: 'Butuh website profesional, modern & responsif? Percayakan pada ahlinya!',
-    cta: '🚀 Lihat Portfolio',
-    ctaUrl: 'https://benyoriki.com/'
   },
   {
     emoji: '🎉',
     badge: '📦 Promo Aktif!',
     title: 'Diskon 20% PDKT Package!',
-    desc: 'Terbatas! Paket PDKT 2 sekarang lebih hemat. Jangan sampai kehabisan.',
-    cta: '🏷️ Lihat Harga',
+    desc: 'Terbatas! Jangan sampai kehabisan.',
+    cta: 'Lihat Harga',
     ctaUrl: null,
     action: () => showPage('pricelist')
-  },
-  {
-    emoji: '💡',
-    badge: '💻 Jasa Web Dev',
-    title: 'Butuh website untuk bisnis kamu?',
-    desc: '@benyoriki siap bantu wujudkan website impianmu — modern, cepat & menjual!',
-    cta: '🌐 benyoriki.com →',
-    ctaUrl: 'https://benyoriki.com/'
   },
   {
     emoji: '⭐',
     badge: '🏆 Top Talent',
     title: 'Dira Cantika — Rating 5.0!',
-    desc: '312+ booking berhasil. Offline date terbaik di Surabaya, tersedia hari ini!',
-    cta: '📅 Booking Sekarang',
+    desc: '312+ booking, tersedia hari ini!',
+    cta: 'Booking',
     ctaUrl: null,
     action: () => showPage('talents')
-  },
-  {
-    emoji: '🚀',
-    badge: '✨ Developer Pilihan',
-    title: 'Website ini adalah karya @benyoriki',
-    desc: 'UI premium, sistem real-time Firebase, & 100% responsive. Mau website seperti ini?',
-    cta: '💬 Hubungi Developer',
-    ctaUrl: 'https://benyoriki.com/'
   },
   {
     emoji: '🎮',
     badge: '🟢 Online Sekarang',
     title: 'Kira Mahesa siap Mabar!',
-    desc: 'Pro gamer rating tertinggi, siap carry kamu ke rank impian. Slot terbatas!',
-    cta: '🎯 Mabar Sekarang',
+    desc: 'Rating tertinggi, slot terbatas!',
+    cta: 'Mabar Sekarang',
     ctaUrl: null,
     action: () => showPage('talents')
   },
@@ -1792,27 +1760,33 @@ const NOTIF_MESSAGES = [
 let _notifIdx = 0;
 let _notifTimer = null;
 let _notifScheduled = false;
+let _notifShownCount = 0;
+const _notifMaxPerSession = 3;
 
 function schedulePopup() {
   if (_notifScheduled) return;
   _notifScheduled = true;
-  // Tampilkan pertama kali setelah 5 detik
-  setTimeout(() => _showNextNotif(), 5000);
+  // Tampilkan pertama kali setelah 12 detik, beri waktu user menjelajah dulu
+  setTimeout(() => _showNextNotif(), 12000);
 }
 
 function _showNextNotif() {
+  if (_notifShownCount >= _notifMaxPerSession) return;
   if (currentPage === 'admin' || currentPage === 'talent-dash') {
-    _notifTimer = setTimeout(_showNextNotif, 20000);
+    _notifTimer = setTimeout(_showNextNotif, 30000);
     return;
   }
   if (document.querySelector('.modal-overlay.open')) {
-    _notifTimer = setTimeout(_showNextNotif, 20000);
+    _notifTimer = setTimeout(_showNextNotif, 30000);
     return;
   }
   const msg = NOTIF_MESSAGES[_notifIdx % NOTIF_MESSAGES.length];
   _notifIdx++;
+  _notifShownCount++;
   showPremiumNotif(msg);
-  _notifTimer = setTimeout(_showNextNotif, 20000);
+  if (_notifShownCount < _notifMaxPerSession) {
+    _notifTimer = setTimeout(_showNextNotif, 45000);
+  }
 }
 
 function showPremiumNotif(msg) {
@@ -1826,57 +1800,32 @@ function showPremiumNotif(msg) {
 
   const isExternal = !!msg.ctaUrl;
   const ctaHref = msg.ctaUrl || '#';
-  // Store action on window for onclick access
   window._pnAction = msg.action || null;
 
   el.innerHTML = `
-    <div class="pn-border"></div>
-    <div class="pn-body">
-      <div class="pn-header">
-        <div class="pn-brand">
-          <div class="pn-brand-dot"></div>
-          Lovia<span style="color:var(--pink-deep);font-style:italic">Partner</span>
-        </div>
-        <button class="pn-close" onclick="closePremiumNotif()" aria-label="Tutup">✕</button>
-      </div>
-      <div class="pn-content">
-        <div class="pn-emoji">${msg.emoji}</div>
-        <div class="pn-text">
-          <div class="pn-title">${msg.title}</div>
-          <div class="pn-desc">${msg.desc}</div>
-          <div class="pn-badge">${msg.badge}</div>
-        </div>
-      </div>
-      <div class="pn-cta">
-        <a href="${ctaHref}" ${isExternal ? 'target="_blank" rel="noopener"' : ''} class="pn-cta-btn" onclick="handleNotifCta(event, ${isExternal})">
-          <i class="fas fa-arrow-right" style="font-size:.7rem"></i> ${msg.cta}
-        </a>
-        <a href="https://wa.me/628988995637" target="_blank" class="pn-wa-btn" title="WhatsApp Admin">
-          <i class="fab fa-whatsapp"></i>
-        </a>
-      </div>
-      <div class="pn-progress">
-        <div class="pn-progress-fill" id="pnProgressFill"></div>
-      </div>
-    </div>`;
+    <div class="pn-emoji">${msg.emoji}</div>
+    <div class="pn-text">
+      <div class="pn-title">${msg.title}</div>
+      <div class="pn-desc">${msg.desc}</div>
+    </div>
+    <a href="${ctaHref}" ${isExternal ? 'target="_blank" rel="noopener"' : ''} class="pn-cta-btn" onclick="handleNotifCta(event, ${isExternal})">
+      ${msg.cta} <i class="fas fa-arrow-right"></i>
+    </a>
+    <button class="pn-close" onclick="closePremiumNotif()" aria-label="Tutup">✕</button>
+    <div class="pn-progress"><div class="pn-progress-fill" id="pnProgressFill"></div></div>`;
 
   document.body.appendChild(el);
 
-  // Trigger show animation
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       el.classList.add('show');
-      // Start progress bar
       const fill = document.getElementById('pnProgressFill');
-      if (fill) {
-        setTimeout(() => fill.classList.add('animating'), 100);
-      }
+      if (fill) setTimeout(() => fill.classList.add('animating'), 100);
     });
   });
 
-  // Auto dismiss after 7 seconds
   clearTimeout(el._hideTimer);
-  el._hideTimer = setTimeout(() => closePremiumNotif(), 7500);
+  el._hideTimer = setTimeout(() => closePremiumNotif(), 6000);
 }
 
 function closePremiumNotif() {
