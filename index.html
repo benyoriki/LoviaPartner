@@ -47,10 +47,26 @@
 
 <!-- LOADING SCREEN -->
 <div class="loading-screen" id="loadingScreen">
+  <div class="loading-particles" id="loadingParticles"></div>
   <div class="loading-inner">
+    <div class="loading-ring">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="loadingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#b8144a"/>
+            <stop offset="55%" stop-color="#b98a44"/>
+            <stop offset="100%" stop-color="#8f74c9"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+        <circle class="ring-fg" cx="50" cy="50" r="42"></circle>
+      </svg>
+      <div class="loading-heart">💗</div>
+    </div>
     <div class="loading-logo">Lovia<span>Partner</span></div>
+    <div class="loading-tagline">Companionship Premium</div>
     <div class="loading-bar"><div class="loading-fill"></div></div>
-    <p>Mempersiapkan pengalaman terbaik...</p>
+    <p id="loadingText">Mempersiapkan pengalaman terbaik...</p>
   </div>
 </div>
 
@@ -188,6 +204,54 @@
         <div class="why-card reveal"><div class="why-icon"><i class="fas fa-star"></i></div><h3>Talent Premium</h3><p>Dipilih dari ratusan kandidat — ramah, asik, dan profesional.</p></div>
         <div class="why-card reveal"><div class="why-icon"><i class="fas fa-bolt"></i></div><h3>Booking Mudah</h3><p>Proses cepat dan mudah. Konfirmasi dalam hitungan menit.</p></div>
         <div class="why-card reveal"><div class="why-icon"><i class="fas fa-headset"></i></div><h3>Support 24/7</h3><p>Admin siap membantu kapan saja via WhatsApp.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section faq-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">FAQ</div>
+        <h2>Pertanyaan yang <em>Sering Ditanyakan</em></h2>
+        <p>Masih ragu? Cek dulu jawabannya di sini</p>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item reveal">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Apakah data & identitas saya aman?</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="faq-answer"><p>Ya. Semua data pengguna dan talent dienkripsi dan tidak pernah dibagikan ke pihak ketiga. Privasi adalah prioritas utama kami.</p></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Bagaimana cara booking talent?</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="faq-answer"><p>Pilih talent favoritmu, tentukan layanan & durasi di halaman Pricelist, lalu konfirmasi lewat WhatsApp admin. Prosesnya cuma hitungan menit.</p></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Apakah semua talent sudah terverifikasi?</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="faq-answer"><p>Setiap talent melalui proses seleksi identitas & wawancara sebelum aktif melayani, ditandai dengan badge "Verified" di profil mereka.</p></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Metode pembayaran apa saja yang tersedia?</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="faq-answer"><p>Pembayaran dikonfirmasi langsung lewat admin WhatsApp — transfer bank & e-wallet populer semua didukung.</p></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            <span>Apakah ada batasan konten dalam layanan ini?</span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="faq-answer"><p>Ya. Lovia Partner hanya menyediakan layanan companionship profesional dengan batasan sopan, dan tidak melayani konten vulgar atau aktivitas melanggar hukum.</p></div>
+        </div>
       </div>
     </div>
   </section>
@@ -652,6 +716,10 @@
 <div class="float-music" id="floatMusic" onclick="toggleMusic()">
   <i class="fas fa-music" id="musicIcon"></i>
 </div>
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Kembali ke atas">
+  <i class="fas fa-arrow-up"></i>
+</button>
+<div class="scroll-progress" id="scrollProgress"></div>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="loginModal" onclick="closeModal('loginModal')">

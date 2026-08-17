@@ -377,12 +377,12 @@ const DEFAULT_TALENTS = [
 ];
 
 const DEFAULT_TESTIMONIALS = [
-  {name:'Amel R.',avatar:'👧',rating:5,text:'Pengalaman pertama sewa talent di Lovia Partner dan langsung ketagihan! Ara super asik, responsif banget. Highly recommended!',service:'Chatting 7 Hari'},
-  {name:'Budi S.',avatar:'👦',rating:5,text:'Mabar sama Kira tuh seru banget, dia pro abis! Rank langsung naik. Dijamin ga nyesel booking di sini.',service:'Mabar Session'},
-  {name:'Citra M.',avatar:'👩',rating:5,text:'Offline date sama Dira sangat menyenangkan! Dia asik, friendly, dan tahu banyak spot kece. Rekomen banget!',service:'Offline Date 4 Jam'},
-  {name:'Dodi F.',avatar:'👨',rating:4,text:'Platform yang profesional dan aman. Proses booking mudah, talent responsif. Pasti bakal order lagi!',service:'Video Call 30 Mnt'},
-  {name:'Erlin P.',avatar:'👧',rating:5,text:'Udah coba beberapa platform, tapi Lovia Partner yang paling nyaman dan terpercaya. Talent-nya berkualitas!',service:'PDKT Package 2'},
-  {name:'Fajar K.',avatar:'👦',rating:5,text:'Reva teman ngobrol yang luar biasa! Ceritanya seru, wawasannya luas. Satu jam kayak lima menit aja.',service:'Calling 60 Menit'},
+  {name:'Rafi A.',rating:5,text:'Anjay respon Ara gercep banget, chat-nya nyambung mulu ga pernah garing. Auto langganan sih ini mah!',service:'Chatting 7 Hari'},
+  {name:'Bayu P.',rating:5,text:'Mabar bareng Kira tuh gokil parah, skill-nya no debat. Rank auto naik, worth it banget dah!',service:'Mabar Session'},
+  {name:'Dimas R.',rating:5,text:'Offline date sama Dira vibes-nya enak banget, orangnya asik dan tau spot-spot kece. Recommended banget bestie!',service:'Offline Date 4 Jam'},
+  {name:'Angga W.',rating:4,text:'Prosesnya smooth, talent-nya responsif, ga ribet sama sekali. Gaskeun order lagi minggu depan!',service:'Video Call 30 Mnt'},
+  {name:'Reza S.',rating:5,text:'Udah cobain banyak platform tapi Lovia Partner tetep juara. Real recommended, ga php sama sekali!',service:'PDKT Package 2'},
+  {name:'Fajar K.',rating:5,text:'Ngobrol sama Reva santai abis, sejam berasa lima menit doang. Worth every rupiah, gaskeun!',service:'Calling 60 Menit'},
 ];
 
 const DEFAULT_PRICELIST = {
@@ -462,19 +462,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initLoading() {
-  // Generate floating particles
+  // Generate floating particles — mix of soft dots and small sparkles
   const container = document.getElementById('loadingParticles');
   if (container) {
     const colors = ['', 'gold', 'purple'];
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0; i < 26; i++) {
       const p = document.createElement('div');
-      const size = 3 + Math.random() * 6;
+      const isSparkle = Math.random() < 0.3;
+      const size = isSparkle ? (10 + Math.random() * 6) : (3 + Math.random() * 6);
       const left = Math.random() * 100;
-      const duration = 3.5 + Math.random() * 3;
-      const delay = Math.random() * 4;
+      const duration = 3.5 + Math.random() * 3.5;
+      const delay = Math.random() * 4.5;
       const drift = (Math.random() * 80 - 40) + 'px';
-      p.className = 'loading-particle ' + colors[Math.floor(Math.random() * colors.length)];
-      p.style.cssText = `left:${left}%;width:${size}px;height:${size}px;--drift:${drift};animation-duration:${duration}s;animation-delay:${delay}s;`;
+      p.className = 'loading-particle ' + colors[Math.floor(Math.random() * colors.length)] + (isSparkle ? ' sparkle' : '');
+      if (isSparkle) {
+        p.textContent = '✦';
+        p.style.cssText = `left:${left}%;font-size:${size}px;--drift:${drift};animation-duration:${duration}s;animation-delay:${delay}s;`;
+      } else {
+        p.style.cssText = `left:${left}%;width:${size}px;height:${size}px;--drift:${drift};animation-duration:${duration}s;animation-delay:${delay}s;`;
+      }
       container.appendChild(p);
     }
   }
@@ -728,14 +734,23 @@ function renderShowcase() {
   setTimeout(initScrollReveal, 60);
 }
 
+const REVIEWER_GRADIENTS = [
+  ['#f6dcc8','#b8144a'], ['#e3dcf6','#4a2f7a'], ['#f6e6cf','#b98a44'],
+  ['#fbe3ea','#8f74c9'], ['#dceaf6','#2f5f7a'], ['#f6dce0','#c8874a'],
+];
+
 function renderTestimonials() {
   const el = document.getElementById('testimonialsGrid'); if (!el) return;
-  el.innerHTML = getTestimonials().map(t => `
+  el.innerHTML = getTestimonials().map((t,i) => {
+    const initial = (t.name || '?').trim().charAt(0).toUpperCase();
+    const grad = REVIEWER_GRADIENTS[i % REVIEWER_GRADIENTS.length];
+    return `
     <div class="testi-card reveal">
-      <div class="testi-header"><div class="testi-avatar">${t.avatar}</div><div><strong>${t.name}</strong><div class="testi-stars">${'⭐'.repeat(t.rating)}</div></div></div>
+      <div class="testi-header"><div class="testi-avatar" style="background:linear-gradient(135deg,${grad[0]},${grad[1]})"><span class="testi-avatar-letter">${initial}</span></div><div><strong>${t.name}</strong><div class="testi-stars">${'⭐'.repeat(t.rating)}</div></div></div>
       <p>"${t.text}"</p>
       <div class="testi-service">${t.service}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   setTimeout(initScrollReveal, 60);
 }
 
@@ -1757,7 +1772,7 @@ function toggleMusic() {
     bgMusic.play().catch(()=>{}); // catch autoplay policy error
     if (icon) icon.className='fas fa-pause';
     if (btn)  btn.classList.add('playing');
-    toast('🎵 Ambient music diputar...','info');
+    toast('🎵 First Love diputar...','info');
   } else {
     bgMusic.pause();
     if (icon) icon.className='fas fa-music';
