@@ -11,7 +11,7 @@
 
   <!-- Open Graph / WhatsApp / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://web637.github.io/LoviaPartner/">
+  <meta property="og:url" content="https://benyoriki.github.io/LoviaPartner/">
   <meta property="og:title" content="Lovia Partner — Temukan Partner Virtual Terbaikmu 💕">
   <meta property="og:description" content="Nikmati pengalaman companionship modern yang nyaman, aman, dan profesional.">
   <meta property="og:image" content="https://benyoriki.github.io/LoviaPartner/preview.jpg">
@@ -31,7 +31,7 @@
 
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="favicon.png">
-  <link rel="icon" type="image/png" href="https://web637.github.io/LoviaPartner/favicon.png">
+  <link rel="icon" type="image/png" href="https://benyoriki.github.io/LoviaPartner/favicon.png">
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -57,17 +57,25 @@
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- PROTOTYPE NOTICE -->
+<div class="proto-badge" id="protoBadge">
+  <i class="fas fa-flask"></i>
+  <span>Prototipe LoviaPartner — hanya contoh untuk keperluan testing. <a href="https://benyoriki.com/" target="_blank" rel="noopener">benyoriki.com</a></span>
+  <button onclick="document.getElementById('protoBadge').classList.add('hide')" aria-label="Tutup">✕</button>
+</div>
+
 <!-- ===== NAVBAR ===== -->
 <nav class="navbar" id="navbar">
   <div class="nav-container">
     <a href="#" class="nav-logo" onclick="showPage('landing')">Lovia<span>Partner</span></a>
     <div class="nav-links" id="navLinks">
-      <a href="#" onclick="showPage('landing')">Beranda</a>
-      <a href="#" onclick="showPage('talents')">Talent</a>
-      <a href="#" onclick="showPage('pricelist')">Pricelist</a>
-      <a href="#" onclick="showPage('layanan')">Layanan</a>
-      <a href="#" onclick="showPage('daftar-talent')">Jadi Talent</a>
-      <a href="#" onclick="showPage('about')">Tentang</a>
+      <div class="nav-links-label">Menu</div>
+      <a href="#" data-page="landing" onclick="showPage('landing')"><i class="fas fa-house"></i><span>Beranda</span></a>
+      <a href="#" data-page="talents" onclick="showPage('talents')"><i class="fas fa-users"></i><span>Talent</span></a>
+      <a href="#" data-page="pricelist" onclick="showPage('pricelist')"><i class="fas fa-tags"></i><span>Pricelist</span></a>
+      <a href="#" data-page="layanan" onclick="showPage('layanan')"><i class="fas fa-heart-circle-check"></i><span>Layanan</span></a>
+      <a href="#" data-page="daftar-talent" onclick="showPage('daftar-talent')"><i class="fas fa-user-plus"></i><span>Jadi Talent</span></a>
+      <a href="#" data-page="about" onclick="showPage('about')"><i class="fas fa-circle-info"></i><span>Tentang</span></a>
     </div>
     <div class="nav-actions">
       <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
@@ -82,6 +90,7 @@
     </div>
   </div>
 </nav>
+<div class="nav-backdrop" id="navBackdrop" onclick="toggleMobileMenu()"></div>
 
 <!-- ===== PAGES WRAPPER ===== -->
 <div id="appContent">
