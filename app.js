@@ -94,13 +94,21 @@ function initFirebaseListeners() {
   });
 
   // ── TESTIMONIALS ──
+  // TESTIMONIALS_VERSION bumps whenever DEFAULT_TESTIMONIALS content changes,
+  // forcing a reseed even if Firebase already has older seeded data.
   db.ref('testimonials').on('value', snap => {
     const val = snap.val();
-    if (val) {
-      _testiCache = Object.values(val);
+    const currentVersion = val && val.__version;
+    if (val && currentVersion === TESTIMONIALS_VERSION) {
+      const rest = Object.assign({}, val);
+      delete rest.__version;
+      _testiCache = Object.values(rest);
     } else {
       _testiCache = DEFAULT_TESTIMONIALS;
-      DEFAULT_TESTIMONIALS.forEach((t,i) => db.ref('testimonials/t'+i).set(t));
+      const seed = {};
+      DEFAULT_TESTIMONIALS.forEach((t,i) => { seed['t'+i] = t; });
+      seed.__version = TESTIMONIALS_VERSION;
+      db.ref('testimonials').set(seed);
     }
     const tGrid = document.getElementById('testimonialsGrid');
     if (tGrid && tGrid.children.length > 0) renderTestimonials();
@@ -162,6 +170,7 @@ function setTestimonials(arr) {
   _testiCache = arr;
   const map = {};
   arr.forEach((t,i) => { map['t'+i] = t; });
+  map.__version = TESTIMONIALS_VERSION;
   db.ref('testimonials').set(map).catch(e => console.error('setTestimonials error:', e));
 }
 
@@ -376,6 +385,9 @@ const DEFAULT_TALENTS = [
    ig:'@rio.ardiansyah',tiktok:'@rio_lens',verified:true,username:'rio01',password:'rio123'},
 ];
 
+// Bump this whenever DEFAULT_TESTIMONIALS content below changes, so returning
+// visitors' Firebase data (seeded from an older version) gets refreshed too.
+const TESTIMONIALS_VERSION = 2;
 const DEFAULT_TESTIMONIALS = [
   {name:'Rafi A.',rating:5,text:'Anjay respon Ara gercep banget, chat-nya nyambung mulu ga pernah garing. Auto langganan sih ini mah!',service:'Chatting 7 Hari'},
   {name:'Bayu P.',rating:5,text:'Mabar bareng Kira tuh gokil parah, skill-nya no debat. Rank auto naik, worth it banget dah!',service:'Mabar Session'},
@@ -1354,7 +1366,7 @@ function renderAdminTestimonials(el) {
   el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem"><h2 style="font-family:var(--font-display)">Kelola Testimoni ⭐</h2></div>
     <div class="dash-section"><div class="table-scroll"><table class="admin-table"><thead><tr><th>User</th><th>Rating</th><th>Teks</th><th>Layanan</th><th>Aksi</th></tr></thead><tbody>
     ${ts.map((t,i)=>`<tr>
-      <td>${t.avatar} <strong>${t.name}</strong></td>
+      <td>${(t.name||'?').charAt(0)} <strong>${t.name}</strong></td>
       <td>${'⭐'.repeat(t.rating)}</td>
       <td style="max-width:200px;font-size:.78rem;color:var(--text-sec)">${t.text.slice(0,90)}...</td>
       <td><span class="testi-service">${t.service}</span></td>
@@ -1772,7 +1784,7 @@ function toggleMusic() {
     bgMusic.play().catch(()=>{}); // catch autoplay policy error
     if (icon) icon.className='fas fa-pause';
     if (btn)  btn.classList.add('playing');
-    toast('🎵 First Love diputar...','info');
+    toast('🎵 Ambient music diputar...','info');
   } else {
     bgMusic.pause();
     if (icon) icon.className='fas fa-music';
