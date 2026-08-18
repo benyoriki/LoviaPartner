@@ -1,31 +1,28 @@
 'use strict';
 
 // ══════════════════════════════════════════════════════
-//  FOTO TALENT — Google Drive Thumbnail System
+//  FOTO TALENT — local optimized images (img/01.jpg .. 12.jpg)
+//  Catatan: 12 foto yang tersedia semuanya wanita, jadi hanya
+//  dipasang untuk talent perempuan (t001-t008). Talent laki-laki
+//  (t009-t011) tetap pakai avatar monogram karena tidak ada foto
+//  yang cocok di set ini.
 // ══════════════════════════════════════════════════════
 
 const G = id => id ? `https://drive.google.com/thumbnail?id=${id}&sz=w600` : null;
 
-const PHOTO_IDS = {
-  't001': { main: null, gallery: [null, null, null] },
-  't002': { main: null, gallery: [null, null, null] },
-  't003': { main: null, gallery: [null, null, null] },
-  't004': { main: null, gallery: [null, null, null] },
-  't005': { main: null, gallery: [null, null, null] },
-  't006': { main: null, gallery: [null, null, null] },
-  't007': { main: null, gallery: [null, null, null] },
-  't008': { main: null, gallery: [null, null, null] },
+const TALENT_PHOTOS = {
+  't001': { main: 'img/01.jpg', gallery: ['img/09.jpg', null, null] },
+  't002': { main: 'img/02.jpg', gallery: ['img/10.jpg', null, null] },
+  't003': { main: 'img/03.jpg', gallery: ['img/11.jpg', null, null] },
+  't004': { main: 'img/04.jpg', gallery: ['img/12.jpg', null, null] },
+  't005': { main: 'img/05.jpg', gallery: [null, null, null] },
+  't006': { main: 'img/06.jpg', gallery: [null, null, null] },
+  't007': { main: 'img/07.jpg', gallery: [null, null, null] },
+  't008': { main: 'img/08.jpg', gallery: [null, null, null] },
   't009': { main: null, gallery: [null, null, null] },
   't010': { main: null, gallery: [null, null, null] },
   't011': { main: null, gallery: [null, null, null] },
 };
-
-const TALENT_PHOTOS = Object.fromEntries(
-  Object.entries(PHOTO_IDS).map(([id, p]) => [id, {
-    main:    G(p.main),
-    gallery: (p.gallery||[]).map(G)
-  }])
-);
 
 const TALENT_GRADIENTS = {
   't001': ['#fbe3ea','#e8577f'], 't002': ['#f3e6f5','#8f74c9'],
@@ -292,7 +289,7 @@ function getTalentGallery(id) {
 
 function photoImgTag(url, name, extraStyle) {
   if (!url) return '';
-  return `<img src="${url}" alt="${name||''}" style="width:100%;height:100%;object-fit:cover;display:block;${extraStyle||''}" loading="lazy" onerror="this.style.display='none';var n=this.nextElementSibling;if(n&&n.classList&&n.classList.contains('talent-avatar-fallback'))n.style.display='flex';">`;
+  return `<img src="${url}" alt="${name||''}" style="width:100%;height:100%;object-fit:cover;display:block;${extraStyle||''}" loading="lazy" onerror="console.warn('Foto talent gagal dimuat, cek folder img/ ada di tempat yang sama dengan index.html:', this.src);this.style.display='none';var n=this.nextElementSibling;if(n&&n.classList&&n.classList.contains('talent-avatar-fallback'))n.style.display='flex';">`;
 }
 
 // ── STATE ──
@@ -665,6 +662,7 @@ function initTyping() {
 // ── PAGE NAVIGATION ──
 function showPage(p) {
   currentPage = p;
+  document.body.classList.toggle('in-dashboard', p === 'admin' || p === 'talent-dash');
   const isDash = (p === 'admin' || p === 'talent-dash');
 
   // Activate correct page
@@ -767,6 +765,12 @@ function renderTestimonials() {
 }
 
 // ── RENDER TALENTS PAGE ──
+function resetTalentFilters() {
+  const ids = ['searchTalent','filterGender','filterService','filterLocation','sortTalent'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  renderTalents();
+}
+
 function renderTalents() {
   const grid = document.getElementById('talentGrid'); if (!grid) return;
   let talents = getTalents();
@@ -786,7 +790,15 @@ function renderTalents() {
 
   const cnt = document.getElementById('talentCount'); if (cnt) cnt.textContent = talents.length;
 
-  if (!talents.length) { grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:4rem;color:var(--text-muted)"><div style="font-size:3rem">🔍</div><p>Tidak ada talent yang sesuai</p></div>'; return; }
+  if (!talents.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon"><i class="fas fa-magnifying-glass"></i></div>
+      <h3>Belum Ada Talent yang Cocok</h3>
+      <p>Coba ganti kata kunci atau reset filter untuk melihat semua talent kami.</p>
+      <button class="btn-outline" onclick="resetTalentFilters()"><i class="fas fa-rotate-left"></i> Reset Filter</button>
+    </div>`;
+    return;
+  }
 
   grid.innerHTML = talents.map(t => {
     const photoUrl = getTalentPhotoUrl(t.id);
@@ -1232,8 +1244,8 @@ function renderAdminOverview(el) {
     </div>
     <div class="dash-grid-4">
       <div class="dash-stat-card" style="border-top:3px solid var(--pink-deep)"><div class="dsc-icon">👥</div><div class="dsc-val">${talents.length}</div><div class="dsc-label">Total Talent</div></div>
-      <div class="dash-stat-card" style="border-top:3px solid #48bb78"><div class="dsc-icon">🟢</div><div class="dsc-val">${talents.filter(t=>t.status==='online').length}</div><div class="dsc-label">Talent Online</div></div>
-      <div class="dash-stat-card" style="border-top:3px solid #f59e0b"><div class="dsc-icon">📦</div><div class="dsc-val">${orders.length}</div><div class="dsc-label">Total Order</div></div>
+      <div class="dash-stat-card" style="border-top:3px solid #059669"><div class="dsc-icon">🟢</div><div class="dsc-val">${talents.filter(t=>t.status==='online').length}</div><div class="dsc-label">Talent Online</div></div>
+      <div class="dash-stat-card" style="border-top:3px solid var(--gold)"><div class="dsc-icon">📦</div><div class="dsc-val">${orders.length}</div><div class="dsc-label">Total Order</div></div>
       <div class="dash-stat-card" style="border-top:3px solid var(--purple-deep)"><div class="dsc-icon">⏳</div><div class="dsc-val">${pending.length}</div><div class="dsc-label">Pending Daftar</div></div>
     </div>
     <div class="admin-2col-grid">
@@ -1499,13 +1511,13 @@ function renderTalentOverview(el,t) {
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem">
       <div><h2 style="font-family:var(--font-display)">Halo, ${t.nickname||t.name}! ${t.avatar}</h2><p style="color:var(--text-muted);font-size:.83rem">${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})}</p></div>
-      <button class="btn-sm ${t.status==='online'?'':'btn-primary'}" onclick="toggleTalentStatus('${t.id}')" style="${t.status==='online'?'border-color:#48bb78;color:#48bb78':''}">${t.status==='online'?'🟢 Online — klik Offline':'⚫ Offline — klik Online'}</button>
+      <button class="btn-sm ${t.status==='online'?'':'btn-primary'}" onclick="toggleTalentStatus('${t.id}')" style="${t.status==='online'?'border-color:#059669;color:#059669':''}">${t.status==='online'?'🟢 Online — klik Offline':'⚫ Offline — klik Online'}</button>
     </div>
     <div class="dash-grid-4">
       <div class="dash-stat-card" style="border-top:3px solid var(--pink-deep)"><div class="dsc-icon">📦</div><div class="dsc-val">${myOrders.length}</div><div class="dsc-label">Total Booking</div></div>
-      <div class="dash-stat-card" style="border-top:3px solid #f59e0b"><div class="dsc-icon">⏳</div><div class="dsc-val">${myOrders.filter(o=>o.status==='Menunggu').length}</div><div class="dsc-label">Menunggu</div></div>
-      <div class="dash-stat-card" style="border-top:3px solid #48bb78"><div class="dsc-icon">✅</div><div class="dsc-val">${myOrders.filter(o=>o.status==='Aktif').length}</div><div class="dsc-label">Aktif</div></div>
-      <div class="dash-stat-card" style="border-top:3px solid #2563eb"><div class="dsc-icon">🏅</div><div class="dsc-val">${myOrders.filter(o=>o.status==='Selesai').length}</div><div class="dsc-label">Selesai</div></div>
+      <div class="dash-stat-card" style="border-top:3px solid var(--gold)"><div class="dsc-icon">⏳</div><div class="dsc-val">${myOrders.filter(o=>o.status==='Menunggu').length}</div><div class="dsc-label">Menunggu</div></div>
+      <div class="dash-stat-card" style="border-top:3px solid #059669"><div class="dsc-icon">✅</div><div class="dsc-val">${myOrders.filter(o=>o.status==='Aktif').length}</div><div class="dsc-label">Aktif</div></div>
+      <div class="dash-stat-card" style="border-top:3px solid var(--purple-deep)"><div class="dsc-icon">🏅</div><div class="dsc-val">${myOrders.filter(o=>o.status==='Selesai').length}</div><div class="dsc-label">Selesai</div></div>
     </div>
     <div class="admin-2col-grid" style="margin-bottom:1rem">
       <div class="dash-section" style="background:linear-gradient(135deg,var(--pink-light),var(--purple-light))">
@@ -1523,7 +1535,7 @@ function renderTalentOverview(el,t) {
           <button class="btn-sm" onclick="showTalentTab('profile')" style="justify-content:flex-start;gap:.6rem"><i class="fas fa-user-edit"></i> Edit Profil</button>
           <button class="btn-sm" onclick="showTalentTab('profile')" style="justify-content:flex-start;gap:.6rem;border-color:var(--pink);color:var(--pink-deep)"><i class="fas fa-camera"></i> Kelola Foto</button>
           <button class="btn-sm" onclick="showTalentTab('earnings')" style="justify-content:flex-start;gap:.6rem"><i class="fas fa-wallet"></i> Pendapatan</button>
-          <button class="btn-sm" onclick="toggleTalentStatus('${t.id}')" style="justify-content:flex-start;gap:.6rem;${t.status==='online'?'border-color:#ef4444;color:#ef4444':'border-color:#48bb78;color:#48bb78'}">${t.status==='online'?'<i class="fas fa-moon"></i> Set Offline':'<i class="fas fa-circle"></i> Set Online'}</button>
+          <button class="btn-sm" onclick="toggleTalentStatus('${t.id}')" style="justify-content:flex-start;gap:.6rem;${t.status==='online'?'border-color:#ef4444;color:#ef4444':'border-color:#059669;color:#059669'}">${t.status==='online'?'<i class="fas fa-moon"></i> Set Offline':'<i class="fas fa-circle"></i> Set Online'}</button>
         </div>
       </div>
     </div>
