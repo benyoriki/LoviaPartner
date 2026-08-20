@@ -10,6 +10,9 @@
 
 const G = id => id ? `https://drive.google.com/thumbnail?id=${id}&sz=w600` : null;
 
+// Bump this whenever TALENT_PHOTOS below changes, to clear any stale
+// admin-uploaded photos in Firebase from earlier testing sessions.
+const CUSTOM_PHOTOS_RESET_VERSION = 1;
 const TALENT_PHOTOS = {
   't001': { main: 'img/01.jpg', gallery: ['img/09.jpg', null, null] },
   't002': { main: 'img/02.jpg', gallery: ['img/10.jpg', null, null] },
@@ -50,6 +53,7 @@ let _ordersCache   = null;
 let _priceCache    = null;
 let _testiCache    = null;
 let _photosCache   = {};
+let _inboxCache    = {}; // { admin: [...], talent_t001: [...], ... }
 
 // Listener aktif untuk auto-refresh UI
 function initFirebaseListeners() {
@@ -112,8 +116,29 @@ function initFirebaseListeners() {
   });
 
   // ── CUSTOM PHOTOS ──
-  db.ref('customPhotos').on('value', snap => {
-    _photosCache = snap.val() || {};
+  // CUSTOM_PHOTOS_RESET_VERSION bumps whenever the built-in talent photos
+  // change, so leftover test uploads from earlier sessions (which always
+  // took priority over code-level photos) get cleared exactly once.
+  db.ref('customPhotos/__meta/version').once('value').then(vsnap => {
+    const storedVersion = vsnap.val() || 0;
+    if (storedVersion < CUSTOM_PHOTOS_RESET_VERSION) {
+      db.ref('customPhotos').set({ __meta: { version: CUSTOM_PHOTOS_RESET_VERSION } });
+    }
+    db.ref('customPhotos').on('value', snap => {
+      const val = snap.val() || {};
+      delete val.__meta;
+      _photosCache = val;
+      const grid = document.getElementById('talentGrid');
+      if (grid && grid.children.length > 0) renderTalents();
+    });
+  });
+  // ── INBOX (pesan masuk, menggantikan redirect WhatsApp) ──
+  db.ref('inbox').on('value', snap => {
+    _inboxCache = snap.val() || {};
+    updateInboxBadge();
+    const adminInboxEl = document.getElementById('admin-tab-inbox');
+    if (adminInboxEl && adminInboxEl.classList.contains('active')) renderAdminInbox(adminInboxEl);
+    if (currentPage === 'talent-dash') renderTalentDash();
   });
 }
 
@@ -289,7 +314,7 @@ function getTalentGallery(id) {
 
 function photoImgTag(url, name, extraStyle) {
   if (!url) return '';
-  return `<img src="${url}" alt="${name||''}" style="width:100%;height:100%;object-fit:cover;display:block;${extraStyle||''}" loading="lazy" onerror="console.warn('Foto talent gagal dimuat, cek folder img/ ada di tempat yang sama dengan index.html:', this.src);this.style.display='none';var n=this.nextElementSibling;if(n&&n.classList&&n.classList.contains('talent-avatar-fallback'))n.style.display='flex';">`;
+  return `<img src="${url}" alt="${name||''}" style="width:100%;height:100%;object-fit:cover;display:block;${extraStyle||''}" loading="lazy" onerror="console.warn('Foto talent gagal dimuat, cek folder img/ ada di tempat yang sama dengan index.html:', this.src);this.style.display='none';var n=this.nextElementSibling;if(n&&n.classList&&n.classList.contains('tc-avatar-fallback'))n.style.display='flex';">`;
 }
 
 // ── STATE ──
@@ -494,31 +519,47 @@ function initLoading() {
     }
   }
 
-  // Rotate loading messages across the 5s duration
+  // Rotate loading messages across the 7s duration — pesan yang lebih hangat & personal
   const messages = [
     'Mempersiapkan pengalaman terbaik...',
-    'Menyiapkan talent pilihan...',
-    'Hampir siap...'
+    'Setiap koneksi berawal dari satu sapaan hangat 💕',
+    'Menyiapkan talent pilihan untukmu...',
+    'Kadang yang kita butuh cuma teman untuk didengar',
+    'Hampir siap menemanimu...'
   ];
   const textEl = document.getElementById('loadingText');
   let mi = 0;
   const msgTimer = setInterval(() => {
     mi++;
-    if (textEl && mi < messages.length) textEl.textContent = messages[mi];
-  }, 1600);
+    if (textEl && mi < messages.length) {
+      textEl.style.opacity = 0;
+      setTimeout(() => { textEl.textContent = messages[mi]; textEl.style.opacity = 1; }, 200);
+    }
+  }, 1350);
 
   setTimeout(() => {
     clearInterval(msgTimer);
     const ls = document.getElementById('loadingScreen');
     if (ls) ls.classList.add('hidden');
-  }, 5000);
+  }, 7000);
 }
 
 function initCursor() {
-  if (window.innerWidth <= 768) return;
+  const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 ||
+    !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if (window.innerWidth <= 768 || isTouchDevice) return;
   const dot = document.getElementById('cursorDot'), ring = document.getElementById('cursorRing');
   if (!dot || !ring) return;
-  document.addEventListener('mousemove', e => { dot.style.left=e.clientX+'px'; dot.style.top=e.clientY+'px'; setTimeout(()=>{ ring.style.left=e.clientX+'px'; ring.style.top=e.clientY+'px'; },80); });
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; }, { passive: true });
+  function loop() {
+    dot.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
+    rx += (mx - rx) * 0.18;
+    ry += (my - ry) * 0.18;
+    ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) translate(-50%, -50%)`;
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
   document.addEventListener('mouseover', e => { if (e.target.matches('button,a,.talent-card,.service-card,.price-item-card,.package-card')) { ring.style.width='50px'; ring.style.height='50px'; ring.style.borderColor='var(--pink-deep)'; }});
   document.addEventListener('mouseout',  e => { if (e.target.matches('button,a,.talent-card,.service-card,.price-item-card,.package-card')) { ring.style.width='32px'; ring.style.height='32px'; ring.style.borderColor='var(--pink)'; }});
 }
@@ -528,6 +569,119 @@ function initNavbar() {
     const nb = document.getElementById('navbar');
     if (nb) nb.classList.toggle('scrolled', window.scrollY > 20);
   });
+}
+
+function customSelectHTML(id, options, onChange) {
+  const first = options[0] || { value: '', label: '' };
+  const opts = options.map((o,i) => `<div class="cs-option${i===0?' selected':''}" data-value="${String(o.value).replace(/"/g,'&quot;')}" onclick="selectCustomOption(this,'${id}'${onChange?`,'${onChange}'`:''})">${o.label}</div>`).join('');
+  return `<div class="custom-select" id="${id}Wrap">
+    <button type="button" class="custom-select-trigger" onclick="toggleCustomSelect('${id}')">
+      <span class="cs-value">${first.label}</span>
+      <i class="fas fa-chevron-down"></i>
+    </button>
+    <div class="custom-select-panel" id="${id}Panel">${opts}</div>
+    <input type="hidden" id="${id}" value="${first.value}">
+  </div>`;
+}
+
+function toggleCustomSelect(id) {
+  const wrap = document.getElementById(id+'Wrap');
+  const wasOpen = wrap.classList.contains('open');
+  document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+  if (!wasOpen) wrap.classList.add('open');
+}
+
+function selectCustomOption(el, id, onChange) {
+  const wrap = document.getElementById(id+'Wrap');
+  wrap.querySelectorAll('.cs-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  wrap.querySelector('.cs-value').textContent = el.textContent;
+  document.getElementById(id).value = el.dataset.value;
+  wrap.classList.remove('open');
+  if (onChange && typeof window[onChange] === 'function') window[onChange]();
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.custom-select.open').forEach(w => w.classList.remove('open'));
+  }
+});
+
+// ══════════════════════════════════════════════════════
+//  INBOX SYSTEM — pesan masuk internal, menggantikan redirect ke WhatsApp
+// ══════════════════════════════════════════════════════
+
+function sendInboxMessage({name, contact, message, talentId, talentName, source}) {
+  const id = 'm' + Date.now() + Math.random().toString(36).slice(2,7);
+  const entry = {
+    name: name || 'Guest', contact: contact || '-', message: message || '',
+    talentId: talentId || null, talentName: talentName || null,
+    source: source || 'Website', time: new Date().toISOString(), read: false
+  };
+  db.ref('inbox/admin/' + id).set(entry);
+  if (talentId) db.ref('inbox/talent_' + talentId + '/' + id).set(entry);
+  return true;
+}
+
+function openMessageModal(talentId, talentName, presetText) {
+  window._msgContext = { talentId: talentId || null, talentName: talentName || null };
+  const label = document.getElementById('msgContextLabel');
+  if (label) label.textContent = talentName ? `Pesan untuk ${talentName}` : 'Pesan untuk Admin Lovia Partner';
+  const ta = document.getElementById('msgText');
+  if (ta) ta.value = presetText || '';
+  openModal('messageModal');
+}
+
+function submitMessage() {
+  const name = (document.getElementById('msgName')||{}).value?.trim();
+  const contact = (document.getElementById('msgContact')||{}).value?.trim();
+  const text = (document.getElementById('msgText')||{}).value?.trim();
+  if (!name || !contact || !text) { toast('Lengkapi semua kolom pesan!','error'); return; }
+  const ctx = window._msgContext || {};
+  sendInboxMessage({ name, contact, message: text, talentId: ctx.talentId, talentName: ctx.talentName, source: ctx.talentName ? 'Chat Talent' : 'Chat Admin' });
+  closeModal('messageModal');
+  toast('Pesan terkirim! Admin akan segera membalas 💌','success');
+  document.getElementById('msgName').value = '';
+  document.getElementById('msgContact').value = '';
+  document.getElementById('msgText').value = '';
+}
+
+function getInboxFor(key) {
+  const raw = _inboxCache[key] || {};
+  return Object.entries(raw)
+    .map(([id, m]) => ({ ...m, _id: id }))
+    .sort((a,b) => new Date(b.time) - new Date(a.time));
+}
+
+function updateInboxBadge() {
+  const badge = document.getElementById('adminInboxBadge');
+  if (badge) {
+    const unread = getInboxFor('admin').filter(m => !m.read).length;
+    badge.textContent = unread > 0 ? unread : '';
+    badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+  }
+}
+
+function markInboxRead(key, id) {
+  db.ref('inbox/' + key + '/' + id + '/read').set(true);
+}
+
+function renderAdminInbox(el) {
+  const msgs = getInboxFor('admin');
+  el.innerHTML = `
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:.35rem"><i class="fas fa-envelope" style="color:var(--pink-deep)"></i> Pesan Masuk</h2>
+    <p style="color:var(--text-muted);font-size:.83rem;margin-bottom:1.5rem">Semua pesan dari pengunjung situs — tidak ada yang diarahkan ke WhatsApp lagi.</p>
+    ${msgs.length ? `<div class="inbox-list">${msgs.map(m => `
+      <div class="inbox-item ${m.read?'':'unread'}" onclick="markInboxRead('admin','${m._id}');this.classList.remove('unread')">
+        <div class="inbox-item-top">
+          <strong>${m.name}</strong>
+          ${m.talentName ? `<span class="inbox-tag">untuk ${m.talentName}</span>` : ''}
+          <span class="inbox-time">${new Date(m.time).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
+        <p class="inbox-item-msg">${m.message}</p>
+        <div class="inbox-item-contact"><i class="fas fa-phone"></i> ${m.contact}</div>
+      </div>`).join('')}</div>` : `<div class="empty-state"><div class="empty-state-icon"><i class="fas fa-inbox"></i></div><h3>Belum Ada Pesan</h3><p>Pesan dari pengunjung situs akan muncul di sini.</p></div>`}
+  `;
 }
 
 function toggleFaq(btn) {
@@ -723,12 +877,12 @@ function renderHome() {
 function renderShowcase() {
   const el = document.getElementById('talentShowcase'); if (!el) return;
   const featured = getTalents().filter(t => t.verified && t.status==='online').slice(0,4);
-  el.innerHTML = featured.map(t => {
+  el.innerHTML = featured.map((t,i) => {
     const photoUrl = getTalentPhotoUrl(t.id);
     const grad = TALENT_GRADIENTS[t.id] || ['#fbe3ea','#e8577f'];
     return `<div class="talent-card reveal" onclick="openTalentDetail('${t.id}')">
       <div class="tc-photo" style="background:linear-gradient(135deg,${grad[0]},${grad[1]})">
-        ${photoUrl ? `<img src="${photoUrl}" alt="${t.name}" loading="lazy" onerror="this.style.display='none'">` : ''}
+        ${photoUrl ? `<img src="${photoUrl}" alt="${t.name}" loading="lazy" style="animation-delay:${-(i%4)*2.3}s" onload="this.classList.add('loaded')" onerror="this.style.display='none'">` : ''}
         <div class="tc-avatar-fallback" style="${photoUrl?'display:none':''}">${avatarFallbackHTML(t)}</div>
         <div class="tc-status ${t.status==='online'?'online':''}">${t.status==='online'?'🟢 Online':'⚫ Offline'}</div>
       </div>
@@ -800,12 +954,12 @@ function renderTalents() {
     return;
   }
 
-  grid.innerHTML = talents.map(t => {
+  grid.innerHTML = talents.map((t,i) => {
     const photoUrl = getTalentPhotoUrl(t.id);
     const grad = TALENT_GRADIENTS[t.id] || ['#fbe3ea','#e8577f'];
     return `<div class="talent-card" onclick="openTalentDetail('${t.id}')">
       <div class="tc-photo" style="background:linear-gradient(135deg,${grad[0]},${grad[1]})">
-        ${photoUrl ? `<img src="${photoUrl}" alt="${t.name}" loading="lazy" onerror="this.style.display='none'">` : ''}
+        ${photoUrl ? `<img src="${photoUrl}" alt="${t.name}" loading="lazy" style="animation-delay:${-(i%4)*2.3}s" onload="this.classList.add('loaded')" onerror="this.style.display='none'">` : ''}
         <div class="tc-avatar-fallback" style="${photoUrl?'display:none':''}">${avatarFallbackHTML(t)}</div>
         <div class="tc-status ${t.status==='online'?'online':t.status==='busy'?'busy':''}">${t.status==='online'?'🟢 Online':t.status==='busy'?'🟡 Sibuk':'⚫ Offline'}</div>
         ${t.verified?'<div class="tc-verified">✓ Verified</div>':''}
@@ -819,7 +973,7 @@ function renderTalents() {
         <div class="tc-services">${(t.services||[]).slice(0,3).map(s=>`<span>${s}</span>`).join('')}${(t.services||[]).length>3?`<span>+${t.services.length-3}</span>`:''}</div>
         <div style="display:flex;gap:.5rem;margin-top:.75rem">
           <button class="btn-primary" style="flex:1;justify-content:center;font-size:.8rem" onclick="event.stopPropagation();openBooking('${t.id}')">Booking</button>
-          <a href="https://wa.me/6287778787822?text=Halo+saya+tertarik+dengan+${encodeURIComponent(t.name)}" target="_blank" style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;flex-shrink:0;text-decoration:none" onclick="event.stopPropagation()"><i class="fab fa-whatsapp"></i></a>
+          <button style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;flex-shrink:0;border:none;cursor:pointer" onclick="event.stopPropagation();openMessageModal('${t.id}','${t.name.replace(/'/g,"\\'")}','Halo, saya tertarik dengan ${t.name.replace(/'/g,"\\'")}')"><i class="fas fa-comment-dots"></i></button>
         </div>
       </div>
     </div>`;
@@ -837,12 +991,12 @@ function openTalentDetail(id) {
   el.innerHTML = `
     <div class="talent-detail-grid">
       <div class="td-photos">
-        <div style="width:100%;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;background:linear-gradient(135deg,${grad[0]},${grad[1]});display:flex;align-items:center;justify-content:center;margin-bottom:.75rem">
-          ${photoUrl?`<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`:''}
+        <div class="td-hero-photo" style="width:100%;aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;background:linear-gradient(135deg,${grad[0]},${grad[1]});display:flex;align-items:center;justify-content:center;margin-bottom:.75rem">
+          ${photoUrl?`<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'" onload="this.classList.add('loaded')">`:''}
           <span style="font-size:5rem${photoUrl?';display:none':''}">${t.avatar}</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-          ${gallery.filter(Boolean).map(u=>`<div style="aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;background:var(--card)"><img src="${u}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'"></div>`).join('')}
+          ${gallery.filter(Boolean).map(u=>`<div style="aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;background:var(--card)"><img src="${u}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'" onload="this.classList.add('loaded')"></div>`).join('')}
         </div>
       </div>
       <div class="td-info">
@@ -869,7 +1023,7 @@ function openTalentDetail(id) {
         </div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap">
           <button class="btn-primary glow-btn" style="flex:1;justify-content:center" onclick="openBooking('${t.id}')"><i class="fas fa-calendar-plus"></i> Booking Sekarang</button>
-          <a href="https://wa.me/6287778787822?text=Halo+saya+ingin+booking+${encodeURIComponent(t.name)}" target="_blank" class="btn-outline" style="flex:1;justify-content:center;text-decoration:none;display:flex;align-items:center;gap:.4rem"><i class="fab fa-whatsapp"></i> WhatsApp Admin</a>
+          <button class="btn-outline" style="flex:1;justify-content:center;display:flex;align-items:center;gap:.4rem" onclick="openMessageModal('${t.id}','${t.name.replace(/'/g,"\\'")}','Halo, saya ingin booking ${t.name.replace(/'/g,"\\'")}')"><i class="fas fa-comment-dots"></i> Chat Admin</button>
         </div>
       </div>
     </div>`;
@@ -901,7 +1055,7 @@ function renderPricelist() {
           <ul class="pkg-items">${(pkg.items||[]).map(i=>`<li><i class="fas fa-check"></i> ${i}</li>`).join('')}</ul>
           <div style="display:flex;gap:.4rem;margin-top:auto">
             <button class="btn-primary" style="flex:1;justify-content:center" onclick="openBookingFromPrice('${s.label} — ${pkg.label}','${pkg.price}')">Pesan</button>
-            <a href="https://wa.me/6287778787822?text=Mau+pesan+${encodeURIComponent(s.label+' '+pkg.label)}" target="_blank" style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;text-decoration:none"><i class="fab fa-whatsapp"></i></a>
+            <button style="width:36px;height:36px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:1rem;border:none;cursor:pointer" onclick="openMessageModal(null,null,'Mau pesan ${(s.label+' '+pkg.label).replace(/'/g,"\\'")}')"><i class="fas fa-comment-dots"></i></button>
           </div>
         </div>`).join('')}</div></div>`;
     }
@@ -912,7 +1066,7 @@ function renderPricelist() {
         <div class="price-item-price">Rp ${item.price}<small>/sesi</small></div>
         <div style="display:flex;gap:.4rem;margin-top:.75rem">
           <button class="btn-sm" style="flex:1;justify-content:center" onclick="openBookingFromPrice('${s.label} — ${item.label}','${item.price}')">Pesan</button>
-          <a href="https://wa.me/6287778787822?text=Mau+pesan+${encodeURIComponent(s.label+' '+item.label)}" target="_blank" style="width:34px;height:34px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:.9rem;flex-shrink:0;text-decoration:none"><i class="fab fa-whatsapp"></i></a>
+          <button style="width:34px;height:34px;background:var(--pink-light);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--pink-deep);font-size:.9rem;flex-shrink:0;border:none;cursor:pointer" onclick="openMessageModal(null,null,'Mau pesan ${(s.label+' '+item.label).replace(/'/g,"\\'")}')"><i class="fas fa-comment-dots"></i></button>
         </div>
       </div>`).join('')}</div></div>`;
   }).join('');
@@ -956,19 +1110,14 @@ function buildBookingModal() {
       <div><strong>${talent.name}</strong><div style="font-size:.78rem;color:var(--text-muted)">${talent.location} · ⭐ ${talent.rating}</div></div>
     </div>
     <div class="form-group"><label>Pilih Layanan</label>
-      <select id="bkService" style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)">
-        ${(talent.services||[]).map(s=>`<option>${s}</option>`).join('')}
-      </select>
+      ${customSelectHTML('bkService', (talent.services||[]).map(s=>({value:s,label:s})))}
     </div>`
   : `<div style="padding:.85rem;background:var(--purple-light);border-radius:var(--radius-sm);margin-bottom:1.25rem">
       <strong>📦 ${serviceName}</strong>
       <div style="font-size:.82rem;color:var(--text-muted);margin-top:.25rem">Harga: Rp ${servicePrice}</div>
     </div>
     <div class="form-group"><label>Pilih Talent (Opsional)</label>
-      <select id="bkTalent" style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)">
-        <option value="">Pilihkan oleh admin</option>
-        ${getTalents().filter(t=>t.status==='online').map(t=>`<option value="${t.id}">${t.avatar} ${t.name} — ${t.location}</option>`).join('')}
-      </select>
+      ${customSelectHTML('bkTalent', [{value:'',label:'Pilihkan oleh admin'}, ...getTalents().filter(t=>t.status==='online').map(t=>({value:t.id,label:`${t.avatar} ${t.name} — ${t.location}`}))])}
     </div>`;
 
   const content = document.getElementById('bookingContent'); if (!content) return;
@@ -982,8 +1131,8 @@ function buildBookingModal() {
     <div class="booking-step" id="bkStep2">
       <h4 style="font-family:var(--font-display);margin-bottom:1.25rem">2. Pilih Jadwal</h4>
       <div class="form-group"><label>Tanggal</label><input type="date" id="bkDate" min="${minDate}" style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)" /></div>
-      <div class="form-group" style="margin-top:.75rem"><label>Jam</label><select id="bkTime" style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)"><option>09:00 — Pagi</option><option>12:00 — Siang</option><option>15:00 — Sore</option><option>18:00 — Petang</option><option>20:00 — Malam</option></select></div>
-      <div class="form-group" style="margin-top:.75rem"><label>Lokasi/Platform</label><select id="bkLocation" style="width:100%;padding:.65rem 1rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text)"><option>Online (WhatsApp)</option><option>Online (Discord)</option><option>Online (Zoom)</option><option>Offline — Cafe</option><option>Offline — Mall</option><option>Offline — Taman</option></select></div>
+      <div class="form-group" style="margin-top:.75rem"><label>Jam</label>${customSelectHTML('bkTime', ['09:00 — Pagi','12:00 — Siang','15:00 — Sore','18:00 — Petang','20:00 — Malam'].map(v=>({value:v,label:v})))}</div>
+      <div class="form-group" style="margin-top:.75rem"><label>Lokasi/Platform</label>${customSelectHTML('bkLocation', ['Online (WhatsApp)','Online (Discord)','Online (Zoom)','Offline — Cafe','Offline — Mall','Offline — Taman'].map(v=>({value:v,label:v})))}</div>
       <div style="display:flex;gap:.75rem;margin-top:1rem">
         <button class="btn-outline" style="flex:1;justify-content:center" onclick="bkPrev(2)"><i class="fas fa-arrow-left"></i> Kembali</button>
         <button class="btn-primary" style="flex:1;justify-content:center" onclick="bkNext(2)">Lanjut <i class="fas fa-arrow-right"></i></button>
@@ -1227,6 +1376,7 @@ function showAdminTab(tab) {
   if      (tab === 'overview')      renderAdminOverview(c);
   else if (tab === 'talents')       renderAdminTalents(c);
   else if (tab === 'orders')        renderAdminOrders(c);
+  else if (tab === 'inbox')         renderAdminInbox(c);
   else if (tab === 'pricelist')     renderAdminPricelist(c);
   else if (tab === 'testimonials')  renderAdminTestimonials(c);
   else if (tab === 'settings')      renderAdminSettings(c);
@@ -1463,6 +1613,16 @@ function renderTalentDash() {
 
   // Always show overview tab fresh on dashboard load
   showTalentTab('overview');
+
+  // Update inbox badge immediately too
+  if (t) {
+    const badge = document.getElementById('talentInboxBadge');
+    if (badge) {
+      const unread = getInboxFor('talent_' + t.id).filter(m => !m.read).length;
+      badge.textContent = unread > 0 ? unread : '';
+      badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+    }
+  }
 }
 
 function showTalentTab(tab) {
@@ -1495,12 +1655,37 @@ function showTalentTab(tab) {
   // Render the correct tab content
   if      (tab === 'overview')  renderTalentOverview(c, t);
   else if (tab === 'orders')    renderTalentOrders(c, t);
+  else if (tab === 'inbox')     renderTalentInbox(c, t);
   else if (tab === 'profile')   renderTalentProfile(c, t);
   else if (tab === 'earnings')  renderTalentEarnings(c, t);
 
   // Scroll content area to top
   const content = document.getElementById('talentContent');
   if (content) content.scrollTop = 0;
+}
+
+function renderTalentInbox(el, t) {
+  if (!t) { el.innerHTML = '<p style="padding:2rem;color:var(--text-muted)">Data tidak ditemukan</p>'; return; }
+  const msgs = getInboxFor('talent_' + t.id);
+  const badge = document.getElementById('talentInboxBadge');
+  if (badge) {
+    const unread = msgs.filter(m => !m.read).length;
+    badge.textContent = unread > 0 ? unread : '';
+    badge.style.display = unread > 0 ? 'inline-flex' : 'none';
+  }
+  el.innerHTML = `
+    <h2 style="font-family:var(--font-display);font-size:1.4rem;margin-bottom:.35rem"><i class="fas fa-envelope" style="color:var(--pink-deep)"></i> Pesan Masuk</h2>
+    <p style="color:var(--text-muted);font-size:.83rem;margin-bottom:1.5rem">Pesan dari calon customer yang ingin kenal kamu lebih dekat.</p>
+    ${msgs.length ? `<div class="inbox-list">${msgs.map(m => `
+      <div class="inbox-item ${m.read?'':'unread'}" onclick="markInboxRead('talent_${t.id}','${m._id}');this.classList.remove('unread')">
+        <div class="inbox-item-top">
+          <strong>${m.name}</strong>
+          <span class="inbox-time">${new Date(m.time).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
+        <p class="inbox-item-msg">${m.message}</p>
+        <div class="inbox-item-contact"><i class="fas fa-phone"></i> ${m.contact}</div>
+      </div>`).join('')}</div>` : `<div class="empty-state"><div class="empty-state-icon"><i class="fas fa-inbox"></i></div><h3>Belum Ada Pesan</h3><p>Pesan dari customer yang tertarik denganmu akan muncul di sini.</p></div>`}
+  `;
 }
 
 function renderTalentOverview(el,t) {
@@ -1766,8 +1951,8 @@ function renderTalentEarnings(el, t) {
 }
 
 // ── MODALS ──
-function openModal(id)  { const el=document.getElementById(id); if(el)el.classList.add('open'); }
-function closeModal(id) { const el=document.getElementById(id); if(el)el.classList.remove('open'); }
+function openModal(id)  { const el=document.getElementById(id); if(el)el.classList.add('open'); document.body.classList.add('modal-open'); }
+function closeModal(id) { const el=document.getElementById(id); if(el)el.classList.remove('open'); if(!document.querySelector('.modal-overlay.open')) document.body.classList.remove('modal-open'); }
 
 function showNotifModal(msg, icon='🎉') {
   const c = document.getElementById('notifContent');
@@ -1796,7 +1981,7 @@ function toggleMusic() {
     bgMusic.play().catch(()=>{}); // catch autoplay policy error
     if (icon) icon.className='fas fa-pause';
     if (btn)  btn.classList.add('playing');
-    toast('🎵 Ambient music diputar...','info');
+    toast('🎵 Lagu First Love diputar....','info');
   } else {
     bgMusic.pause();
     if (icon) icon.className='fas fa-music';
