@@ -701,7 +701,7 @@ function toggleMobileMenu() {
 }
 
 function initTheme() {
-  const s = localStorage.getItem('lovia_theme') || 'light';
+  const s = localStorage.getItem('lovia_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', s);
   updateThemeIcon(s);
 }

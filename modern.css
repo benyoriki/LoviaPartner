@@ -1,0 +1,120 @@
+/* =============================================
+   LOVIA PARTNER — Modern 2026 layer
+   Dimuat SETELAH style.css. Konsep: "velvet midnight" —
+   hitam-anggur, rose menyala, champagne gold, kaca buram.
+   ============================================= */
+
+:root {
+  --pink: #ff7da5;
+  --pink-deep: #e8447a;
+  --gold: #e6c08a;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --glass: rgba(255,255,255,.055);
+  --glass-line: rgba(255,255,255,.12);
+  --grad-rose: linear-gradient(135deg,#ff7da5 0%,#e8447a 55%,#c2306a 100%);
+  --grad-gold: linear-gradient(120deg,#f3d9a8,#e6c08a 50%,#c99a5b);
+}
+[data-theme="dark"] {
+  --bg: #0f0710;
+  --bg-card: #1a0e18;
+  --bg-card2: #221220;
+  --border: rgba(255,255,255,.1);
+  --text: #fbeff4;
+  --text-sec: #e0c3cf;
+  --text-muted: #b08e9c;
+  --ink: #0a050b;
+  --pink-light: rgba(255,125,165,.14);
+}
+html { scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* ── Navbar kaca ── */
+.navbar.scrolled, [data-theme="dark"] .navbar.scrolled {
+  background: rgba(15,7,16,.62);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--glass-line);
+}
+.nav-logo { font-size: 1.45rem; letter-spacing: -.02em; }
+.nav-logo span { background: var(--grad-rose); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.btn-nav-login { background: var(--grad-rose) !important; color: #fff !important; border: 0 !important; box-shadow: 0 6px 22px rgba(232,68,122,.4); }
+
+/* ── Tombol ── */
+.btn-primary {
+  background: var(--grad-rose);
+  padding: 1rem 2.2rem; font-size: .95rem;
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 34px rgba(232,68,122,.45);
+}
+.btn-primary:hover { background: var(--grad-rose); filter: brightness(1.08); transform: translateY(-3px); }
+.glow-btn { animation: pulseGlow 2.8s ease-in-out infinite; }
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 34px rgba(232,68,122,.4); }
+  50% { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 52px rgba(255,125,165,.7); } }
+.btn-outline { padding: 1rem 2.1rem; font-size: .95rem; background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(10px); }
+.btn-outline:hover { background: rgba(255,255,255,.14); color: var(--text); border-color: var(--pink); }
+
+/* ── Hero ── */
+.hero { background: radial-gradient(120% 80% at 80% 0%, #3a1230 0%, transparent 60%), radial-gradient(90% 70% at 0% 100%, #2a1346 0%, transparent 60%), var(--bg); }
+.shape-1 { background: radial-gradient(rgba(255,90,150,.38), transparent 70%); }
+.shape-2 { background: radial-gradient(rgba(143,116,201,.34), transparent 70%); }
+.shape-3 { background: radial-gradient(rgba(230,192,138,.22), transparent 70%); }
+.hero-badge { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(12px); font-weight: 600; }
+.hero-title { font-size: clamp(2.5rem, 5.6vw, 4.6rem); line-height: 1.05; letter-spacing: -.035em; font-weight: 650; }
+.hero-title em { background: var(--grad-rose); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .08em; }
+.hero-title em::after { -webkit-text-fill-color: var(--pink); }
+.hero-sub { font-size: clamp(1rem, 1.5vw, 1.18rem); line-height: 1.75; color: var(--text-sec); max-width: 34rem; }
+.hero-stats { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px; padding: 1.1rem 1.4rem; backdrop-filter: blur(14px); width: fit-content; max-width: 100%; }
+.hstat-num { font-family: var(--font-display); background: var(--grad-gold); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* kartu talent di hero: pakai foto asli */
+.hcard { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 24px 60px rgba(0,0,0,.45); border-radius: 22px; }
+.hcard-avatar { width: 54px; height: 54px; border-radius: 50%; color: transparent; background-size: cover; background-position: center top; border: 2px solid var(--pink); }
+.hcard-avatar-1 { background-image: url('img/03.jpg'); }
+.hcard-avatar-2 { background-image: url('img/06.jpg'); }
+.hcard-avatar-3 { background-image: url('img/09.jpg'); }
+
+/* ── Section ── */
+.section-badge { background: var(--glass); border: 1px solid var(--glass-line); color: var(--gold); backdrop-filter: blur(10px); }
+.section-header h2 { font-size: clamp(1.9rem, 4vw, 3rem); letter-spacing: -.03em; }
+.section-header h2 em { background: var(--grad-rose); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ── Kartu kaca ── */
+.service-card, .why-card, .faq-item, .testi-card, .talent-card {
+  background: var(--glass); border: 1px solid var(--glass-line); border-radius: 24px;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  transition: transform .5s var(--ease), border-color .3s, box-shadow .5s var(--ease);
+}
+.service-card:hover, .why-card:hover, .talent-card:hover {
+  transform: translateY(-8px); border-color: rgba(255,125,165,.55);
+  box-shadow: 0 28px 60px rgba(232,68,122,.22);
+}
+.service-card .sc-icon { filter: drop-shadow(0 6px 14px rgba(255,125,165,.45)); }
+.service-card.featured { background: linear-gradient(145deg, rgba(255,125,165,.22), rgba(143,116,201,.18)); border-color: rgba(255,125,165,.5); }
+.talent-card { overflow: hidden; }
+.talent-card .tc-photo img { transition: transform .8s var(--ease); }
+.testimonials { background: linear-gradient(180deg, #0a050b, #170a17); }
+.cta-section { background: radial-gradient(80% 120% at 50% 0%, #4a1238 0%, #150a14 70%); }
+.footer { background: #090409; }
+
+/* ── Widget melayang: tidak saling menimpa ── */
+.float-wa { bottom: calc(5.2rem + env(safe-area-inset-bottom)); right: 1rem; width: 56px; height: 56px; background: var(--grad-rose); box-shadow: 0 10px 30px rgba(232,68,122,.55); }
+.float-music { bottom: calc(1.2rem + env(safe-area-inset-bottom)); right: 1.1rem; width: 48px; height: 48px; }
+.premium-notif { bottom: calc(4.6rem + env(safe-area-inset-bottom)); left: .75rem; max-width: calc(100vw - 6rem); background: rgba(26,14,24,.86); border-color: var(--glass-line); backdrop-filter: blur(18px); }
+.proto-badge { bottom: calc(.75rem + env(safe-area-inset-bottom)); left: .75rem; max-width: calc(100vw - 5.5rem); background: rgba(26,14,24,.86); color: var(--text-muted); }
+
+/* ── HP ── */
+@media (max-width: 768px) {
+  .hero { padding: 5.5rem 1.25rem 3rem; text-align: center; gap: 2.2rem; }
+  .hero-title { font-size: clamp(2.3rem, 10vw, 3.1rem); }
+  .hero-sub { margin-inline: auto; }
+  .hero-actions { display: flex; flex-direction: column; gap: .8rem; }
+  .hero-actions .btn-primary, .hero-actions .btn-outline { width: 100%; justify-content: center; }
+  .hero-stats { margin-inline: auto; padding: .9rem 1rem; }
+  .hstat-num { font-size: 1.7rem; }
+  .services-grid { grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+  .service-card { padding: 1.1rem .9rem; border-radius: 20px; }
+  .section { padding-block: 3.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow-btn, .shape { animation: none !important; }
+  html { scroll-behavior: auto; }
+}
