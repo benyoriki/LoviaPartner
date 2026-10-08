@@ -1,120 +1,101 @@
-/* =============================================
-   LOVIA PARTNER — Modern 2026 layer
-   Dimuat SETELAH style.css. Konsep: "velvet midnight" —
-   hitam-anggur, rose menyala, champagne gold, kaca buram.
-   ============================================= */
+/* LoviaPartner — modern.css (dimuat terakhir). Ringan: tanpa backdrop-filter, tanpa animasi infinite, aman Chrome 109 / Windows 7. */
+:root{--r:20px;--r-lg:28px;--ease:cubic-bezier(.2,.7,.2,1)}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-feature-settings:"kern" 1;text-rendering:optimizeSpeed}
+h1,h2,h3{letter-spacing:-.025em;text-wrap:balance}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:10px}
+img{max-width:100%}
 
-:root {
-  --pink: #ff7da5;
-  --pink-deep: #e8447a;
-  --gold: #e6c08a;
-  --ease: cubic-bezier(.22,1,.36,1);
-  --glass: rgba(255,255,255,.055);
-  --glass-line: rgba(255,255,255,.12);
-  --grad-rose: linear-gradient(135deg,#ff7da5 0%,#e8447a 55%,#c2306a 100%);
-  --grad-gold: linear-gradient(120deg,#f3d9a8,#e6c08a 50%,#c99a5b);
+/* --- Navbar: solid, bersih, tanpa blur --- */
+nav,.navbar{background:var(--nav-bg)!important;border-bottom:1px solid var(--border);box-shadow:0 1px 0 rgba(0,0,0,.02)}
+
+/* --- Tombol --- */
+.btn-primary{background:var(--grad);color:#fff;border:0;border-radius:999px;font-weight:700;box-shadow:0 8px 22px rgba(200,30,91,.30);transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(200,30,91,.38)}
+.btn-primary:active,.btn-outline:active{transform:scale(.97)}
+.btn-outline{border-radius:999px;font-weight:700;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text)}
+
+/* --- Kartu --- */
+.service-card,.why-card,.faq-item,.testi-card,.talent-card,.price-item-card,.package-card,.dash-stat-card{border-radius:var(--r);border:1px solid var(--border);background:var(--bg-card);box-shadow:var(--shadow-sm);transition:transform .22s var(--ease),box-shadow .22s var(--ease),border-color .22s}
+.service-card:hover,.talent-card:hover,.package-card:hover,.testi-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--pink)}
+.talent-card img,.talent-card [class*="photo"]{transition:transform .5s var(--ease)}
+.talent-card:hover img{transform:scale(1.04)}
+
+/* --- FIX: Testimoni (teks tak terlihat) --- */
+section.testimonials{background:var(--bg-card2)}
+section.testimonials .section-header h2,section.testimonials .section-header p{color:var(--text)!important}
+section.testimonials .section-header p{color:var(--text-sec)!important}
+section.testimonials .testi-card{background:var(--bg-card)}
+section.testimonials .testi-card p{color:var(--text-sec)!important;font-style:normal;min-height:3em}
+section.testimonials .testi-header strong{color:var(--text)!important;display:block}
+.testi-card{display:flex;flex-direction:column;gap:.5rem}
+.testi-service{align-self:flex-start;margin-top:auto}
+
+/* --- FIX: CTA (tombol putih kosong + latar transparan) --- */
+.cta-section .cta-box{background:linear-gradient(135deg,#3b1148 0%,#6a1f5a 55%,#8c2a62 100%)!important;border:1px solid rgba(255,255,255,.14);border-radius:var(--r-lg);box-shadow:var(--shadow-lg)}
+.cta-box h2,.cta-box p{color:#fff!important}
+.cta-box h2 em{color:#f3d9a4!important}
+.cta-box .btn-outline{background:transparent!important;color:#fff!important;border:1.5px solid rgba(255,255,255,.65)!important}
+.cta-box .btn-outline:hover{background:#fff!important;color:#6a1f5a!important}
+
+
+/* --- Toast / banner prototipe jangan menutupi FAB --- */
+.toast,[class*="toast"]{max-width:min(92vw,420px);border-radius:16px}
+
+
+/* --- HP --- */
+@media (max-width:640px){
+ section{scroll-margin-top:72px}
+ .section-header h2{font-size:clamp(1.6rem,7vw,2.1rem)}
+ .btn-primary,.btn-outline{min-height:48px}
+ .testimonials-grid{gap:.9rem}
+ body{padding-bottom:env(safe-area-inset-bottom,0px)}
 }
-[data-theme="dark"] {
-  --bg: #0f0710;
-  --bg-card: #1a0e18;
-  --bg-card2: #221220;
-  --border: rgba(255,255,255,.1);
-  --text: #fbeff4;
-  --text-sec: #e0c3cf;
-  --text-muted: #b08e9c;
-  --ink: #0a050b;
-  --pink-light: rgba(255,125,165,.14);
+/* --- Desktop lebar --- */
+@media (min-width:1100px){
+ .testimonials-grid{gap:1.5rem}
+ .service-card,.why-card{padding:2rem}
 }
-html { scroll-behavior: smooth; }
-body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+/* --- Mode hemat: hormati preferensi pengguna --- */
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (display-mode:standalone){.developer-credit{padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))}}
 
-/* ── Navbar kaca ── */
-.navbar.scrolled, [data-theme="dark"] .navbar.scrolled {
-  background: rgba(15,7,16,.62);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid var(--glass-line);
-}
-.nav-logo { font-size: 1.45rem; letter-spacing: -.02em; }
-.nav-logo span { background: var(--grad-rose); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.btn-nav-login { background: var(--grad-rose) !important; color: #fff !important; border: 0 !important; box-shadow: 0 6px 22px rgba(232,68,122,.4); }
-
-/* ── Tombol ── */
-.btn-primary {
-  background: var(--grad-rose);
-  padding: 1rem 2.2rem; font-size: .95rem;
-  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 34px rgba(232,68,122,.45);
-}
-.btn-primary:hover { background: var(--grad-rose); filter: brightness(1.08); transform: translateY(-3px); }
-.glow-btn { animation: pulseGlow 2.8s ease-in-out infinite; }
-@keyframes pulseGlow { 0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 34px rgba(232,68,122,.4); }
-  50% { box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 12px 52px rgba(255,125,165,.7); } }
-.btn-outline { padding: 1rem 2.1rem; font-size: .95rem; background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(10px); }
-.btn-outline:hover { background: rgba(255,255,255,.14); color: var(--text); border-color: var(--pink); }
-
-/* ── Hero ── */
-.hero { background: radial-gradient(120% 80% at 80% 0%, #3a1230 0%, transparent 60%), radial-gradient(90% 70% at 0% 100%, #2a1346 0%, transparent 60%), var(--bg); }
-.shape-1 { background: radial-gradient(rgba(255,90,150,.38), transparent 70%); }
-.shape-2 { background: radial-gradient(rgba(143,116,201,.34), transparent 70%); }
-.shape-3 { background: radial-gradient(rgba(230,192,138,.22), transparent 70%); }
-.hero-badge { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(12px); font-weight: 600; }
-.hero-title { font-size: clamp(2.5rem, 5.6vw, 4.6rem); line-height: 1.05; letter-spacing: -.035em; font-weight: 650; }
-.hero-title em { background: var(--grad-rose); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: .08em; }
-.hero-title em::after { -webkit-text-fill-color: var(--pink); }
-.hero-sub { font-size: clamp(1rem, 1.5vw, 1.18rem); line-height: 1.75; color: var(--text-sec); max-width: 34rem; }
-.hero-stats { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px; padding: 1.1rem 1.4rem; backdrop-filter: blur(14px); width: fit-content; max-width: 100%; }
-.hstat-num { font-family: var(--font-display); background: var(--grad-gold); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-/* kartu talent di hero: pakai foto asli */
-.hcard { background: var(--glass); border: 1px solid var(--glass-line); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 24px 60px rgba(0,0,0,.45); border-radius: 22px; }
-.hcard-avatar { width: 54px; height: 54px; border-radius: 50%; color: transparent; background-size: cover; background-position: center top; border: 2px solid var(--pink); }
-.hcard-avatar-1 { background-image: url('img/03.jpg'); }
-.hcard-avatar-2 { background-image: url('img/06.jpg'); }
-.hcard-avatar-3 { background-image: url('img/09.jpg'); }
-
-/* ── Section ── */
-.section-badge { background: var(--glass); border: 1px solid var(--glass-line); color: var(--gold); backdrop-filter: blur(10px); }
-.section-header h2 { font-size: clamp(1.9rem, 4vw, 3rem); letter-spacing: -.03em; }
-.section-header h2 em { background: var(--grad-rose); -webkit-background-clip: text; background-clip: text; color: transparent; }
-
-/* ── Kartu kaca ── */
-.service-card, .why-card, .faq-item, .testi-card, .talent-card {
-  background: var(--glass); border: 1px solid var(--glass-line); border-radius: 24px;
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  transition: transform .5s var(--ease), border-color .3s, box-shadow .5s var(--ease);
-}
-.service-card:hover, .why-card:hover, .talent-card:hover {
-  transform: translateY(-8px); border-color: rgba(255,125,165,.55);
-  box-shadow: 0 28px 60px rgba(232,68,122,.22);
-}
-.service-card .sc-icon { filter: drop-shadow(0 6px 14px rgba(255,125,165,.45)); }
-.service-card.featured { background: linear-gradient(145deg, rgba(255,125,165,.22), rgba(143,116,201,.18)); border-color: rgba(255,125,165,.5); }
-.talent-card { overflow: hidden; }
-.talent-card .tc-photo img { transition: transform .8s var(--ease); }
-.testimonials { background: linear-gradient(180deg, #0a050b, #170a17); }
-.cta-section { background: radial-gradient(80% 120% at 50% 0%, #4a1238 0%, #150a14 70%); }
-.footer { background: #090409; }
-
-/* ── Widget melayang: tidak saling menimpa ── */
-.float-wa { bottom: calc(5.2rem + env(safe-area-inset-bottom)); right: 1rem; width: 56px; height: 56px; background: var(--grad-rose); box-shadow: 0 10px 30px rgba(232,68,122,.55); }
-.float-music { bottom: calc(1.2rem + env(safe-area-inset-bottom)); right: 1.1rem; width: 48px; height: 48px; }
-.premium-notif { bottom: calc(4.6rem + env(safe-area-inset-bottom)); left: .75rem; max-width: calc(100vw - 6rem); background: rgba(26,14,24,.86); border-color: var(--glass-line); backdrop-filter: blur(18px); }
-.proto-badge { bottom: calc(.75rem + env(safe-area-inset-bottom)); left: .75rem; max-width: calc(100vw - 5.5rem); background: rgba(26,14,24,.86); color: var(--text-muted); }
-
-/* ── HP ── */
-@media (max-width: 768px) {
-  .hero { padding: 5.5rem 1.25rem 3rem; text-align: center; gap: 2.2rem; }
-  .hero-title { font-size: clamp(2.3rem, 10vw, 3.1rem); }
-  .hero-sub { margin-inline: auto; }
-  .hero-actions { display: flex; flex-direction: column; gap: .8rem; }
-  .hero-actions .btn-primary, .hero-actions .btn-outline { width: 100%; justify-content: center; }
-  .hero-stats { margin-inline: auto; padding: .9rem 1rem; }
-  .hstat-num { font-size: 1.7rem; }
-  .services-grid { grid-template-columns: repeat(2, 1fr); gap: .8rem; }
-  .service-card { padding: 1.1rem .9rem; border-radius: 20px; }
-  .section { padding-block: 3.5rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .glow-btn, .shape { animation: none !important; }
-  html { scroll-behavior: auto; }
-}
+/* ===== v5 ===== */
+/* Sidebar dasbor: gelap konsisten di mode terang & gelap (menu tak lagi pudar) */
+.dashboard-sidebar,.dashboard-sidebar .db-nav{background:var(--side-bg)!important;color:#ecdde6}
+.dashboard-sidebar .db-nav{background:transparent!important}
+.dashboard-sidebar .db-link{color:#ecdde6!important;font-weight:600}
+.dashboard-sidebar .db-link i{color:#d9b8ca;opacity:1}
+.dashboard-sidebar .db-link.active{background:rgba(255,123,166,.22)!important;color:#fff!important}
+.dashboard-sidebar .db-nav-label{color:#b79cab!important}
+.dashboard-sidebar .db-logo,.dashboard-sidebar .db-logo>span:first-child{color:#fff!important}
+.dashboard-sidebar .db-logo-close{background:rgba(255,255,255,.14);color:#fff;border:0}
+/* Angka KPI: tidak terpotong; kartu HP jadi vertikal */
+.kpi{min-width:0}.kpi>div:last-child{min-width:0}
+.kpi-val{font-size:clamp(1.15rem,5vw,1.6rem);white-space:nowrap;font-variant-numeric:tabular-nums}
+.status-badge{white-space:nowrap}
+@media (max-width:640px){.kpi{flex-direction:column;align-items:flex-start;gap:.6rem}.dash-stat-card{padding:1rem}}
+/* Toast pindah ke atas agar tak menutupi tombol aksi */
+.toast-container{top:calc(76px + env(safe-area-inset-top,0px))!important;bottom:auto!important;right:auto!important;left:50%!important;transform:translateX(-50%);align-items:center;width:min(92vw,360px)}
+/* Form konsisten dua mode */
+input,select,textarea{background:var(--bg-card);color:var(--text);border-color:var(--border)}
+input::placeholder,textarea::placeholder{color:var(--text-muted)}
+select option{background:var(--bg-card);color:var(--text)}
+::selection{background:var(--pink-light);color:var(--text)}
+/* Hero & permukaan 2026: mesh lembut statis (ringan) */
+.hero{background:radial-gradient(60% 50% at 15% 10%,var(--hero-a),transparent 70%),radial-gradient(50% 45% at 90% 20%,var(--hero-b),transparent 70%),radial-gradient(55% 45% at 60% 100%,var(--hero-c),transparent 70%),var(--bg)}
+.section{padding-top:clamp(3rem,7vw,5.5rem);padding-bottom:clamp(3rem,7vw,5.5rem)}
+.section-header h2{font-size:clamp(1.8rem,4.2vw,3rem)}
+.talent-card,.service-card,.why-card,.package-card{border-radius:24px;overflow:hidden}
+.dash-section,.dash-stat-card{border-radius:22px}
+.db-topbar{box-shadow:0 1px 0 var(--border)}
+.theme-toggle,.db-theme{transition:transform .2s var(--ease),background .2s}
+.theme-toggle:hover,.db-theme:hover{transform:rotate(18deg)}
+/* Tombol Pasang Aplikasi (navbar, dasbor, menu, footer) */
+.pwa-btn{display:none;align-items:center;gap:.45rem;border:1.5px solid var(--pink-deep);background:var(--pink-light);color:var(--pink-deep);border-radius:999px;padding:.5rem .95rem;font:700 .82rem var(--font-body,sans-serif);cursor:pointer;white-space:nowrap;transition:transform .15s,background .2s,color .2s}
+.pwa-btn.show{display:inline-flex}
+.pwa-btn:hover{background:var(--pink-deep);color:#fff}.pwa-btn:active{transform:scale(.96)}
+.pwa-btn.icon-only{width:40px;height:40px;padding:0;justify-content:center}
+.pwa-btn.block{width:100%;justify-content:center;padding:.8rem 1rem;margin-top:.75rem}
+@media (max-width:640px){.nav-actions .pwa-btn .lbl{display:none}.nav-actions .pwa-btn{width:40px;height:40px;padding:0;justify-content:center}}
+@media (min-width:1100px){.talent-grid,.talents-grid{gap:1.5rem}}

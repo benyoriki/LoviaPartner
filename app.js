@@ -500,7 +500,7 @@ function initLoading() {
   const container = document.getElementById('loadingParticles');
   if (container) {
     const colors = ['', 'gold', 'purple'];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 10; i++) {
       const p = document.createElement('div');
       const isSparkle = Math.random() < 0.3;
       const size = isSparkle ? (10 + Math.random() * 6) : (3 + Math.random() * 6);
@@ -541,7 +541,7 @@ function initLoading() {
     clearInterval(msgTimer);
     const ls = document.getElementById('loadingScreen');
     if (ls) ls.classList.add('hidden');
-  }, 7000);
+  }, 1500);
 }
 
 function initCursor() {
